@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Sign-In </title>
+    <style>
+        :root {
+            --primary-color:#404040;
+            --secondary-color: #2980b9;
+            --accent-color: #e74c3c;
+            --light-gray: #f5f5f5;
+            --dark-gray: #333;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light-gray);
+            color: var(--dark-gray);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--primary-color);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .required-field::after {
+            content: " *";
+            color: var(--accent-color);
+        }
+        
+        .submit-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: 100%;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        
+        .submit-btn:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .error-message {
+            color: var(--accent-color);
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .photo-capture-container {
+            display: none;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        #cameraPreview {
+            width: 100%;
+            max-width: 320px;
+            background-color: #f0f0f0;
+            margin-bottom: 10px;
+        }
+        
+        #capturedPhoto {
+            display: none;
+            width: 100%;
+            max-width: 320px;
+            margin: 10px auto;
+        }
+        
+        .capture-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        .capture-btn:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .attempts-warning {
+            color: var(--accent-color);
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        
+        .blocked-message {
+            color: var(--accent-color);
+            text-align: center;
+            font-weight: 600;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .forgot-password {
+            text-align: right;
+            margin-top: 10px;
+        }
+        
+        .forgot-password a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .forgot-password a:hover {
+            text-decoration: underline;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+        
+        .shake {
+            animation: shake 0.5s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sign In</h1>
+        
+        <div id="signInForm">
+            <div class="form-group">
+                <label for="email" class="required-field">Email Address</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password" class="required-field">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            
+            <div class="attempts-warning" id="attemptsWarning"></div>
+            
+            <div class="error-message" id="signInError">Invalid email or password. Please try again.</div>
+            
+            <button type="button" id="signInBtn" class="submit-btn">Sign In</button>
+            
+            <div class="forgot-password">
+                <a href="#" id="forgotPassword">Forgot Password?</a>
+            </div>
+        </div>
+        
+        <div class="photo-capture-container" id="photoCaptureContainer">
+            <h3>Security Verification</h3>
+            <p>Please verify your identity by taking a photo</p>
+            
+            <video id="cameraPreview" autoplay playsinline></video>
+            <canvas id="photoCanvas" style="display:none;"></canvas>
+            <img id="capturedPhoto" alt="Your captured photo">
+            
+            <button id="captureBtn" class="capture-btn">Take Photo</button>
+            <button id="retakeBtn" class="capture-btn" style="display:none;">Retake</button>
+            <button id="submitPhotoBtn" class="capture-btn" style="display:none;">Submit & Sign In</button>
+        </div>
+        
+        <div class="blocked-message" id="blockedMessage">
+            <h2>Access Denied</h2>
+            <p>Your IP address has been blocked due to multiple failed sign-in attempts.</p>
+            <p>Please contact support at urbanlinks.2025@gmail.com for assistance.</p>
+        </div>
+    </div>
+
+    <script>
+        // Security variables
+        let failedAttempts = 0;
+        const maxAttempts = 3;
+        let isBlocked = false;
+        let userStream = null;
+        
+        // Check if IP is blocked in localStorage
+        function checkBlockedIP() {
+            const blockedIPs = JSON.parse(localStorage.getItem('blockedIPs') || [];
+            // In a real app, you would get the actual IP from the user
+            // For this demo, we'll use a simulated IP
+            const userIP = 'simulated_ip_' + Math.floor(Math.random() * 1000);
+            
+            if (blockedIPs.includes(userIP)) {
+                isBlocked = true;
+                document.getElementById('signInForm').style.display = 'none';
+                document.getElementById('blockedMessage').style.display = 'block';
+                return true;
+            }
+            return false;
+        }
+        
+        // Block the IP address
+        function blockIP() {
+            const blockedIPs = JSON.parse(localStorage.getItem('blockedIPs') || [];
+            // In a real app, you would get the actual IP from the user
+            const userIP = 'simulated_ip_' + Math.floor(Math.random() * 1000);
+            
+            if (!blockedIPs.includes(userIP)) {
+                blockedIPs.push(userIP);
+                localStorage.setItem('blockedIPs', JSON.stringify(blockedIPs));
+            }
+            
+            isBlocked = true;
+            document.getElementById('signInForm').style.display = 'none';
+            document.getElementById('blockedMessage').style.display = 'block';
+        }
+        
+        // Initialize camera
+        async function initCamera() {
+            try {
+                userStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: 'user',
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    },
+                    audio: false 
+                });
+                const videoElement = document.getElementById('cameraPreview');
+                videoElement.srcObject = userStream;
+            } catch (err) {
+                console.error('Camera error:', err);
+                alert('Could not access camera. Please ensure you have granted camera permissions.');
+                // Fallback - proceed without photo
+                simulatePhotoSubmission();
+            }
+        }
+        
+        // Capture photo from camera
+        function capturePhoto() {
+            const video = document.getElementById('cameraPreview');
+            const canvas = document.getElementById('photoCanvas');
+            const photo = document.getElementById('capturedPhoto');
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            photo.src = canvas.toDataURL('image/png');
+            photo.style.display = 'block';
+            video.style.display = 'none';
+            
+            document.getElementById('captureBtn').style.display = 'none';
+            document.getElementById('retakeBtn').style.display = 'inline-block';
+            document.getElementById('submitPhotoBtn').style.display = 'inline-block';
+        }
+        
+        // Retake photo
+        function retakePhoto() {
+            const video = document.getElementById('cameraPreview');
+            const photo = document.getElementById('capturedPhoto');
+            
+            photo.style.display = 'none';
+            video.style.display = 'block';
+            
+            document.getElementById('captureBtn').style.display = 'inline-block';
+            document.getElementById('retakeBtn').style.display = 'none';
+            document.getElementById('submitPhotoBtn').style.display = 'none';
+        }
+        
+        // Stop camera stream
+        function stopCamera() {
+            if (userStream) {
+                userStream.getTracks().forEach(track => track.stop());
+                userStream = null;
+            }
+        }
+        
+        // Simulate photo submission (for demo purposes)
+        function simulatePhotoSubmission() {
+            // In a real implementation, you would send this to your server
+            console.log('Photo would be submitted to urbanlinks.2025@gmail.com');
+            
+            // For demo, we'll just show an alert
+            alert('Sign-in successful! Photo verification complete.');
+            
+            // Reset form for next user
+            resetSignInForm();
+        }
+        
+        // Submit photo and sign in
+        function submitPhoto() {
+            const photo = document.getElementById('capturedPhoto').src;
+            
+            // In a real implementation, you would:
+            // 1. Send the photo to your server
+            // 2. Your server would then email it to urbanlinks.2025@gmail.com
+            // 3. Then complete the sign-in process
+            
+            // For this demo, we'll simulate this process
+            console.log('Submitting photo to urbanlinks.2025@gmail.com:', photo);
+            
+            // Stop camera
+            stopCamera();
+            
+            // Show success message
+            alert('Sign-in successful! Photo verification complete.');
+            
+            // Reset form for next user
+            resetSignInForm();
+        }
+        
+        // Reset sign in form
+        function resetSignInForm() {
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('signInError').style.display = 'none';
+            
+            document.getElementById('signInForm').style.display = 'block';
+            document.getElementById('photoCaptureContainer').style.display = 'none';
+            
+            // Reset photo capture UI
+            retakePhoto();
+            stopCamera();
+        }
+        
+        // Validate sign in
+        function validateSignIn() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            // Simple validation for demo purposes
+            // In a real app, you would validate against your backend
+            const isValid = email === 'test@example.com' && password === 'password123';
+            
+            return isValid;
+        }
+        
+        // Handle sign in button click
+        document.getElementById('signInBtn').addEventListener('click', () => {
+            if (isBlocked) return;
+            
+            if (validateSignIn()) {
+                // Successful sign in
+                failedAttempts = 0;
+                document.getElementById('attemptsWarning').textContent = '';
+                
+                // Show photo capture
+                document.getElementById('signInForm').style.display = 'none';
+                document.getElementById('photoCaptureContainer').style.display = 'block';
+                
+                // Initialize camera
+                initCamera();
+            } else {
+                // Failed sign in
+                failedAttempts++;
+                document.getElementById('signInForm').classList.add('shake');
+                setTimeout(() => {
+                    document.getElementById('signInForm').classList.remove('shake');
+                }, 500);
+                
+                document.getElementById('signInError').style.display = 'block';
+                
+                // Update attempts warning
+                const remainingAttempts = maxAttempts - failedAttempts;
+                if (remainingAttempts > 0) {
+                    document.getElementById('attemptsWarning').textContent = 
+                        `Warning: ${remainingAttempts} attempt${remainingAttempts > 1 ? 's' : ''} remaining.`;
+                } else {
+                    // Block the IP after max attempts
+                    blockIP();
+                }
+            }
+        });
+        
+        // Handle capture button click
+        document.getElementById('captureBtn').addEventListener('click', capturePhoto);
+        
+        // Handle retake button click
+        document.getElementById('retakeBtn').addEventListener('click', retakePhoto);
+        
+        // Handle submit photo button click
+        document.getElementById('submitPhotoBtn').addEventListener('click', submitPhoto);
+        
+        // Handle forgot password click
+        document.getElementById('forgotPassword').addEventListener('click', (e) => {
+            e.preventDefault();
+            alert('Password reset link would be sent to your email.');
+        });
+        
+        // Check if IP is blocked on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            checkBlockedIP();
+        });
+    </script>
+</body>
+</html>

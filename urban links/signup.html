@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Portal</title>
+    <style>
+        :root {
+            --primary-color: #404040;
+            --secondary-color: #2980b9;
+            --accent-color: #e74c3c;
+            --light-gray: #f5f5f5;
+            --dark-gray: #333;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light-gray);
+            color: var(--dark-gray);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--primary-color);
+        }
+        
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        
+        .tab-btn {
+            padding: 12px 24px;
+            background-color: grey;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .tab-btn.active {
+            background-color: white;
+            border-bottom: 3px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        .tab-btn:hover:not(.active) {
+            background-color: #e8f4fc;
+        }
+        
+        .tab-content {
+            display: none;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .verification-screen {
+            display: none;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            margin: 30px auto;
+            text-align: center;
+        }
+        
+        .verification-screen.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .captcha-container {
+            background-color: #f0f0f0;
+            padding: 15px;
+            margin: 20px 0;
+            display: inline-block;
+            font-family: 'Courier New', monospace;
+            font-size: 24px;
+            letter-spacing: 3px;
+            user-select: none;
+        }
+        
+        .otp-input {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .otp-input input {
+            width: 40px;
+            height: 50px;
+            text-align: center;
+            font-size: 24px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .otp-input input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+        
+        .resend-otp {
+            color: var(--primary-color);
+            cursor: pointer;
+            margin-top: 15px;
+            display: inline-block;
+        }
+        
+        .resend-otp:hover {
+            text-decoration: underline;
+        }
+        
+        .error-message {
+            color: var(--accent-color);
+            margin-top: 10px;
+            display: none;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="file"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .required-field::after {
+            content: " *";
+            color: var(--accent-color);
+        }
+        
+        .file-upload {
+            border: 2px dashed #ddd;
+            padding: 20px;
+            text-align: center;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .file-upload:hover {
+            border-color: var(--primary-color);
+        }
+        
+        .file-upload input {
+            display: none;
+        }
+        
+        .file-upload-label {
+            display: block;
+            margin-bottom: 10px;
+        }
+        
+        .submit-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: 100%;
+            font-weight: 600;
+        }
+        
+        .submit-btn:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .two-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .two-columns {
+                grid-template-columns: 1fr;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .tab-btn {
+                width: 100%;
+                border-bottom: none;
+                border-left: 3px solid transparent;
+            }
+            
+            .tab-btn.active {
+                border-bottom: none;
+                border-left: 3px solid var(--primary-color);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Registration Portal</h1>
+        
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="customer">Customer</button>
+            <button class="tab-btn" data-tab="delivery">Delivery</button>
+            <button class="tab-btn" data-tab="supplier">Supplier</button>
+        </div>
+        
+        <!-- Customer Registration -->
+        <div id="customer" class="tab-content active">
+            <form id="customerForm">
+                <div class="two-columns">
+                    <div class="form-group">
+                        <label for="customerFirstName" class="required-field">First Name</label>
+                        <input type="text" id="customerFirstName" name="firstName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="customerLastName" class="required-field">Last Name</label>
+                        <input type="text" id="customerLastName" name="lastName" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="customerEmail" class="required-field">Email Address</label>
+                    <input type="email" id="customerEmail" name="email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="customerPhone">Phone Number (Optional)</label>
+                    <input type="tel" id="customerPhone" name="phone">
+                </div>
+                
+                <button type="submit" class="submit-btn">Register as Customer</button>
+            </form>
+        </div>
+        
+        <!-- Delivery Registration -->
+        <div id="delivery" class="tab-content">
+            <form id="deliveryForm" enctype="multipart/form-data">
+                <div class="two-columns">
+                    <div class="form-group">
+                        <label for="deliveryFirstName" class="required-field">First Name</label>
+                        <input type="text" id="deliveryFirstName" name="firstName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="deliveryLastName" class="required-field">Last Name</label>
+                        <input type="text" id="deliveryLastName" name="lastName" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="deliveryEmail" class="required-field">Email Address</label>
+                    <input type="email" id="deliveryEmail" name="email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="deliveryPhone" class="required-field">Phone Number</label>
+                    <input type="tel" id="deliveryPhone" name="phone" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="carReg" class="required-field">Car Registration</label>
+                    <input type="text" id="carReg" name="carReg" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="required-field">Proof of Residence (PDF)</label>
+                    <div class="file-upload">
+                        <span class="file-upload-label">Click to upload PDF</span>
+                        <input type="file" id="proofOfResidence" name="proofOfResidence" accept=".pdf" required>
+                        <span id="proofOfResidenceFileName">No file selected</span>
+                    </div>
+                </div>
+                
+                <div class="two-columns">
+                    <div class="form-group">
+                        <label class="required-field">Driver's Photo</label>
+                        <div class="file-upload">
+                            <span class="file-upload-label">Upload Photo</span>
+                            <input type="file" id="driverPhoto" name="driverPhoto" accept="image/*" required>
+                            <span id="driverPhotoFileName">No file selected</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="required-field">Driver's ID Photo</label>
+                        <div class="file-upload">
+                            <span class="file-upload-label">Upload ID</span>
+                            <input type="file" id="driverIdPhoto" name="driverIdPhoto" accept="image/*" required>
+                            <span id="driverIdPhotoFileName">No file selected</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="submit-btn">Register as Delivery</button>
+            </form>
+        </div>
+        
+        <!-- Supplier Registration -->
+        <div id="supplier" class="tab-content">
+            <form id="supplierForm">
+                <div class="form-group">
+                    <label for="companyName" class="required-field">Company Name</label>
+                    <input type="text" id="companyName" name="companyName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="physicalLocation" class="required-field">Physical Location</label>
+                    <input type="text" id="physicalLocation" name="physicalLocation" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="natureOfService" class="required-field">Nature of Service</label>
+                    <textarea id="natureOfService" name="natureOfService" rows="4" required></textarea>
+                </div>
+                
+                <div class="two-columns">
+                    <div class="form-group">
+                        <label for="supplierEmail" class="required-field">Email Address</label>
+                        <input type="email" id="supplierEmail" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="supplierPhone" class="required-field">Phone Number</label>
+                        <input type="tel" id="supplierPhone" name="phone" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="contactPerson">Contact Person (Optional)</label>
+                    <input type="text" id="contactPerson" name="contactPerson">
+                </div>
+                
+                <button type="submit" class="submit-btn">Register as Supplier</button>
+            </form>
+        </div>
+        
+        <!-- Verification Screen -->
+        <div id="verificationScreen" class="verification-screen">
+            <h2>Email Verification</h2>
+            <p>We've sent a verification code from <strong>urbanlinks.2025@gmail.com</strong> to <span id="verificationEmail"></span></p>
+            
+            <div class="otp-input">
+                <input type="text" maxlength="1" data-index="0">
+                <input type="text" maxlength="1" data-index="1">
+                <input type="text" maxlength="1" data-index="2">
+                <input type="text" maxlength="1" data-index="3">
+                <input type="text" maxlength="1" data-index="4">
+                <input type="text" maxlength="1" data-index="5">
+            </div>
+            
+            <p class="error-message" id="verificationError">Invalid OTP code. Please try again.</p>
+            
+            <button id="verifyBtn" class="submit-btn">Verify & Complete Registration</button>
+            <p class="resend-otp" id="resendOtp">Didn't receive code? Resend OTP</p>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching functionality
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remove active class from all buttons and content
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked button and corresponding content
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.tab).classList.add('active');
+            });
+        });
+        
+        // File upload display names
+        document.querySelectorAll('input[type="file"]').forEach(input => {
+            input.addEventListener('change', (e) => {
+                const fileNameSpan = document.getElementById(`${e.target.id}FileName`);
+                if (e.target.files.length > 0) {
+                    fileNameSpan.textContent = e.target.files[0].name;
+                } else {
+                    fileNameSpan.textContent = 'No file selected';
+                }
+            });
+        });
+        
+        // Verification system variables
+        let generatedOtp = '';
+        let currentUserEmail = '';
+        
+        // Generate 6-digit OTP
+        function generateOtp() {
+            return Math.floor(100000 + Math.random() * 900000).toString();
+        }
+        
+        // Simulate sending OTP via email from urbanlinks.2025@gmail.com
+        function sendOtpEmail(email, otp) {
+            console.log(`Sending OTP from urbanlinks.2025@gmail.com to ${email}: ${otp}`);
+            // In a real implementation, you would call your backend here
+            // Example using EmailJS or your own backend:
+            /*
+            fetch('/api/send-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    from: 'urbanlinks.2025@gmail.com',
+                    to: email,
+                    otp: otp
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    alert('Failed to send OTP. Please try again.');
+                }
+            });
+            */
+            
+            // For demo purposes, we'll just show it in console
+            return true;
+        }
+        
+        // Show verification screen
+        function showVerification(email) {
+            currentUserEmail = email;
+            generatedOtp = generateOtp();
+            
+            // Show the email being verified
+            document.getElementById('verificationEmail').textContent = email;
+            
+            // Hide all forms and show verification screen
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById('verificationScreen').classList.add('active');
+            
+            // Clear previous inputs
+            document.querySelectorAll('.otp-input input').forEach(input => input.value = '');
+            document.getElementById('verificationError').style.display = 'none';
+            
+            // Focus first OTP input
+            document.querySelector('.otp-input input').focus();
+            
+            // Send OTP email from urbanlinks.2025@gmail.com
+            sendOtpEmail(email, generatedOtp);
+        }
+        
+        // Handle OTP input navigation
+        document.querySelectorAll('.otp-input input').forEach(input => {
+            input.addEventListener('input', (e) => {
+                if (e.target.value.length === 1) {
+                    const nextIndex = parseInt(e.target.dataset.index) + 1;
+                    const nextInput = document.querySelector(`.otp-input input[data-index="${nextIndex}"]`);
+                    if (nextInput) nextInput.focus();
+                }
+            });
+            
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && e.target.value === '') {
+                    const prevIndex = parseInt(e.target.dataset.index) - 1;
+                    const prevInput = document.querySelector(`.otp-input input[data-index="${prevIndex}"]`);
+                    if (prevInput) prevInput.focus();
+                }
+            });
+        });
+        
+        // Resend OTP button
+        document.getElementById('resendOtp').addEventListener('click', (e) => {
+            e.preventDefault();
+            generatedOtp = generateOtp();
+            sendOtpEmail(currentUserEmail, generatedOtp);
+            alert('New OTP has been sent from urbanlinks.2025@gmail.com!');
+        });
+        
+        // Verification button
+        document.getElementById('verifyBtn').addEventListener('click', () => {
+            const enteredOtp = Array.from(document.querySelectorAll('.otp-input input'))
+                .map(input => input.value)
+                .join('');
+            
+            // Validate OTP
+            if (enteredOtp === generatedOtp) {
+                alert('Verification successful! Registration complete.');
+                // Here you would typically submit the full registration data to your server
+                // and redirect to a success page or dashboard
+            } else {
+                document.getElementById('verificationError').style.display = 'block';
+            }
+        });
+        
+        // Modify form submissions to show verification screen
+        document.getElementById('customerForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('customerEmail').value;
+            showVerification(email);
+        });
+        
+        document.getElementById('deliveryForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('deliveryEmail').value;
+            showVerification(email);
+        });
+        
+        document.getElementById('supplierForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('supplierEmail').value;
+            showVerification(email);
+        });
+    </script>
+</body>
+</html>

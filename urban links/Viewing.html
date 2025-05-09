@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Market</title>
+    <link rel="stylesheet" href="styles.css">
+ <style>
+body  {
+.links {
+			position: absolute;
+			left: 0;
+			left: 0;
+			width: 100%;
+			background-color: #97998a;
+			color: #fff;
+			padding: 10px;
+			text-align: center;
+		}
+		
+		.links a {
+			color: #fff;
+			text-decoration: none;
+			margin: 0 10px;
+		}
+}
+
+
+
+</style>
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+               <div class="links">
+	
+           <a href="file:///C:/Users/user/OneDrive/Desktop/urban%20links/home.html">Home</a>
+     <a href=" file:///C:/Users/user/OneDrive/Desktop/urban%20links/Viewing.html">View Market</a>
+	
+	<a href="file:///C:/Users/user/OneDrive/Desktop/urban%20links/contact%20us%20.html">Contact Us</a>
+	
+         <a href=" file:///C:/Users/user/OneDrive/Desktop/urban%20links/marketing.html">Market</a>
+	
+   
+ 
+	</div>
+            </ul>
+            <div class="search-panel">
+                <input type="text" id="search-input" placeholder="Search products...">
+                <button id="search-button">Search</button>
+            </div>
+        </nav>
+    </header>
+    <main>
+        <section class="products" id="product-list">
+            <h1>Products</h1>
+            <div class="product-grid" id="product-grid">
+                <!-- Products will be displayed here -->
+            </div>
+            <div class="loader" id="loader">
+                <img src="loader.gif" alt="Loading...">
+            </div>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2025 Market</p>
+    </footer>
+
+    <script>
+        const productList = document.getElementById('product-list');
+        const productGrid = document.getElementById('product-grid');
+        const loader = document.getElementById('loader');
+        const searchInput = document.getElementById('search-input');
+        const searchButton = document.getElementById('search-button');
+        let currentPage = 1;
+
+        // Load initial products
+        loadProducts();
+
+        // Scroll event listener
+        window.addEventListener('scroll', () => {
+            const scrollPosition = window.scrollY + window.innerHeight;
+            const productListHeight = productList.offsetHeight;
+
+            if (scrollPosition >= productListHeight) {
+                loader.style.display = 'block';
+                currentPage++;
+                loadProducts();
+            }
+        });
+
+        // Search event listener
+        searchButton.addEventListener('click', () => {
+            const searchTerm = searchInput.value.trim();
+            if (searchTerm) {
+                // Call API to search products
+                fetch(`products.php?search=${searchTerm}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Clear existing products
+                        productGrid.innerHTML = '';
+                        // Display search results
+                        data.forEach(product => {
+                            const productCard = document.createElement('div');
+                            productCard.classList.add('product-card');
+                            productCard.innerHTML = `
+                                <h2>${product.name}</h2>
+                                <p>${product.description}</p>
+                                <p>Price: ${product.price}</p>
+                            `;
+                            productGrid.appendChild(productCard);
+                        });
+                    })
+                    .catch(error => console.error(error));
+            }
+        });
+
+        // Load products function
+        function loadProducts() {
+            fetch(`products.php?page=${currentPage}`)
+                .then(response => response.json())
+                .then(data => {
+                    data.forEach(product => {
+                        const productCard = document.createElement('div');
+                        productCard.classList.add('product-card');
+                        productCard.innerHTML = `
+                            <h2>${product.name}</h2>
+                            <p>${product.description}</p>
+                            <p>Price: ${product.price}</p>
+                        `;
+                        productGrid.appendChild(productCard);
+                    });
+                    loader.style.display = 'none';
+                })
+                .catch(error => console.error(error));
+        }
+    </script>
+</body>
+</html>
